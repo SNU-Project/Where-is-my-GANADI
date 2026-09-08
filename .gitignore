@@ -1,0 +1,45 @@
+# ---- Data (원본 데이터는 커밋하지 않음) ----
+Data/
+data/
+*.zip
+*.tar
+*.tar.gz
+
+# ---- 모델 가중치 / 산출물 ----
+*.pt
+*.pth
+*.ckpt
+*.onnx
+checkpoints/
+runs/
+outputs/
+wandb/
+lightning_logs/
+*.npy
+*.faiss
+*.index
+
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*.egg-info/
+.ipynb_checkpoints/
+.venv/
+venv/
+env/
+.python-version
+
+# ---- Jupyter ----
+*-checkpoint.ipynb
+
+# ---- 자격증명 ----
+kaggle.json
+.env
+*.key
+secrets*.yaml
+
+# ---- OS / 에디터 ----
+.DS_Store
+.idea/
+.vscode/
+*.swp
