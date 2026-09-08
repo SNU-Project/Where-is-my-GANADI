@@ -1,4 +1,4 @@
-# 구해줘, 가나디 (Where is my GANADI)
+# 찾아줘, 가나디 (Where is my GANADI)
 
 보호소 유기견 이미지와 실종견 사진을 매칭하는 **AI 기반 실종견 찾기 서비스**.
 
