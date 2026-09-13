@@ -6,6 +6,8 @@ numpy
 pandas
 scipy
 matplotlib
+datasets
+huggingface_hub
 
 # 노트북
 jupyter
