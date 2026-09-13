@@ -40,6 +40,7 @@ secrets*.yaml
 
 # ---- OS / 에디터 ----
 .DS_Store
+Icon?
 .idea/
 .vscode/
 *.swp
