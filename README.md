@@ -6,29 +6,32 @@
 사람 얼굴인식과 유사한 **개체 재식별(Re-Identification) / 이미지 검색** 문제로 접근합니다.
 
 ## 문서
-- [프로젝트 기획서 / 설계서](docs/00_기획서.md)
+- [과제 요건 (마감 9/22, 제출 체크리스트)](docs/02_과제요건.md) — **가장 먼저 볼 문서**
+- [7일 스프린트 계획](docs/01_7일_스프린트_계획.md) — 현재 진행 기준 문서
+- [전체 기획서 / 설계서 (참고용, 풀스코프)](docs/00_기획서.md)
+- [참고 문헌](docs/references/)
 
-## 데이터셋
+## 데이터셋 (실사용 확정분)
 | 데이터셋 | 역할 |
 |---|---|
-| [Multi-pose Dog Dataset](https://data.mendeley.com/datasets/v5j6m8dzhv/1) | 핵심 Re-ID 학습·평가 |
-| [PetFace](https://dahlian00.github.io/PetFacePage/) | 임베딩 사전학습 · 1:1 검증 |
-| [Dog Breed Identification](https://www.kaggle.com/competitions/dog-breed-identification/data) | 품종 분류기 |
-| [Cats and Dogs Breeds (Oxford-IIIT Pet)](https://www.kaggle.com/datasets/zippyz/cats-and-dogs-breeds-classification-oxford-dataset) | 품종 분류 보조 · 크롭 |
-| [Dogs of the World](https://www.kaggle.com/datasets/lextoumbourou/dogs-world) | 품종 분류 보강 |
-| [국가동물보호정보시스템](https://www.animal.go.kr/front/index.do) | 실제 보호소 갤러리 · 도메인 테스트 · 데모 DB |
+| [Multi-pose Dog Dataset](https://data.mendeley.com/datasets/v5j6m8dzhv/1) | 핵심 Re-ID 학습·평가 (전신·포즈 다양성), 191개체/1,657장 |
+| [DogFaceNet](https://huggingface.co/datasets/dimidagd/DogFaceNet_224resize) | 핵심 Re-ID 학습·평가 (얼굴 클로즈업), 1,393개체/8,363장 |
+| [국가동물보호정보시스템](https://www.animal.go.kr/front/index.do) | 데모 갤러리 + 실도메인 갭 확인 (학습엔 미사용), 유기견 1,464건/2,899장 |
+
+PetFace, Kaggle 품종 3종(Dog Breed Identification / Oxford-IIIT Pet / Dogs of the World)은
+7일 스프린트 스코프에서 제외 (사유는 `docs/01_7일_스프린트_계획.md` 참고).
 
 > 원본 데이터는 저장소에 커밋하지 않습니다 (`.gitignore` 참고). `Data/` 아래에 배치하세요.
 
 ## 환경
 - MacBook Pro M5 (Apple Silicon) · PyTorch MPS
-- 설치: `pip install -r requirements.txt` (준비 예정)
+- 설치: `pip install -r requirements.txt`
 
 ## 진행 상황
-- [x] 프로젝트 기획 초안
-- [ ] 레포 스캐폴딩 (`src/`, `scripts/`, `configs/`)
-- [ ] EDA
-- [ ] 평가 지표(CMC/mAP) + 베이스라인
-- [ ] 임베딩 모델 학습
-- [ ] 품종 분류기
-- [ ] 데모 앱
+- [x] 프로젝트 기획, 과제 요건 확정
+- [x] 데이터 확보 + EDA (MPDD, DogFaceNet, animal.go.kr)
+- [x] 평가 지표(CMC/mAP) + E0 베이스라인 (`metadata/results.csv`)
+- [ ] E1 임베딩 모델 파인튜닝
+- [ ] E2 Prototypical Network 학습
+- [ ] 정성분석 + 데모 앱
+- [ ] 보고서 · 발표자료
