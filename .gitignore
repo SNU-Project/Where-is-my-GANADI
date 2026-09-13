@@ -1,6 +1,5 @@
-# ---- Data (원본 데이터는 커밋하지 않음) ----
-Data/
-data/
+# ---- Data (원본 데이터는 커밋하지 않음, 루트의 Data/만 — src/data 등 코드 폴더는 제외 대상 아님) ----
+/Data/
 *.zip
 *.tar
 *.tar.gz
