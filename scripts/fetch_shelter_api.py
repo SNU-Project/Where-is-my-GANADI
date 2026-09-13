@@ -22,7 +22,7 @@ import time
 from dataclasses import dataclass, fields
 from datetime import datetime, timedelta
 from pathlib import Path
-from urllib.parse import urlparse
+from urllib.parse import unquote, urlparse
 
 import requests
 from dotenv import load_dotenv
@@ -49,7 +49,9 @@ def load_service_key() -> str:
             "ANIMAL_API_SERVICE_KEY가 없습니다. 프로젝트 루트 .env 파일에 "
             "ANIMAL_API_SERVICE_KEY=발급받은_키 를 추가하세요."
         )
-    return key
+    # data.go.kr의 "Encoding" 키(이미 URL-encode된 값, %2B/%2F/%3D 포함)를 넣어도
+    # requests가 이중 인코딩하지 않도록 원문으로 되돌려 둔다. "Decoding" 키는 그대로 통과.
+    return unquote(key)
 
 
 def fetch_page(service_key: str, params: dict, page_no: int, num_of_rows: int = 1000, retries: int = 3):
