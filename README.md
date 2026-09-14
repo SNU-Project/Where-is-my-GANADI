@@ -16,7 +16,7 @@
 |---|---|
 | [Multi-pose Dog Dataset](https://data.mendeley.com/datasets/v5j6m8dzhv/1) | 핵심 Re-ID 학습·평가 (전신·포즈 다양성), 191개체/1,657장 |
 | [DogFaceNet](https://huggingface.co/datasets/dimidagd/DogFaceNet_224resize) | 핵심 Re-ID 학습·평가 (얼굴 클로즈업), 1,393개체/8,363장 |
-| [국가동물보호정보시스템](https://www.animal.go.kr/front/index.do) | 데모 갤러리 + 실도메인 갭 확인 (학습엔 미사용), 유기견 1,464건/2,899장 |
+| [국가동물보호정보시스템](https://www.animal.go.kr/front/index.do) | 데모 갤러리 + 실도메인 갭 확인 (학습엔 미사용), 공고중 유기견 1,446건(전처리 후) |
 
 PetFace, Kaggle 품종 3종(Dog Breed Identification / Oxford-IIIT Pet / Dogs of the World)은
 7일 스프린트 스코프에서 제외 (사유는 `docs/01_7일_스프린트_계획.md` 참고).
