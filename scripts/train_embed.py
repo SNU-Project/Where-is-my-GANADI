@@ -23,40 +23,17 @@ import numpy as np
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader, WeightedRandomSampler
-from torchvision import transforms
 
 from src.data.manifests import load_dogfacenet_split
 from src.data.quality import class_balance_weights
 from src.data.train_dataset import build_combined_train_set, build_mpdd_val_closed_set
+from src.data.transforms import build_train_transform, build_eval_transform
 from src.models.backbones import BNNeckModel, get_device
 from src.retrieval.extract import extract_features
 from src.retrieval.metrics import compute_distmat, evaluate_reid
 
-IMAGENET_MEAN = [0.485, 0.456, 0.406]
-IMAGENET_STD = [0.229, 0.224, 0.225]
-
 CKPT_DIR = Path("checkpoints")
 LOG_CSV = Path("metadata/train_log_E1.csv")
-
-
-def build_train_transform():
-    return transforms.Compose([
-        transforms.RandomResizedCrop(224, scale=(0.5, 1.0)),
-        transforms.RandomHorizontalFlip(),
-        transforms.ColorJitter(0.2, 0.2, 0.2),
-        transforms.ToTensor(),
-        transforms.Normalize(IMAGENET_MEAN, IMAGENET_STD),
-        transforms.RandomErasing(p=0.3),
-    ])
-
-
-def build_eval_transform():
-    return transforms.Compose([
-        transforms.Resize(256),
-        transforms.CenterCrop(224),
-        transforms.ToTensor(),
-        transforms.Normalize(IMAGENET_MEAN, IMAGENET_STD),
-    ])
 
 
 @torch.no_grad()
