@@ -22,14 +22,15 @@ import sys
 import time
 from pathlib import Path
 
+sys.stdout.reconfigure(line_buffering=True)  # 파일로 리다이렉트해도 진행상황이 실시간으로 보이게
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import numpy as np
 import torch
 import torch.nn.functional as F
-from PIL import Image
 
 from src.data.episodic import EpisodeSampler, group_by_label
+from src.data.image_cache import load_rgb
 from src.data.manifests import load_dogfacenet_split
 from src.data.train_dataset import build_combined_train_set
 from src.data.transforms import build_eval_transform, build_train_transform
@@ -42,7 +43,7 @@ LOG_CSV = Path("metadata/train_log_E2.csv")
 
 
 def load_batch(paths, transform, device):
-    imgs = [transform(Image.open(p).convert("RGB")) for p in paths]
+    imgs = [transform(load_rgb(p)) for p in paths]
     return torch.stack(imgs).to(device)
 
 
@@ -81,7 +82,7 @@ def main():
     args = ap.parse_args()
 
     device = get_device()
-    print(f"[info] device={device}")
+    print(f"[info] device={device}", flush=True)
 
     train_transform = build_train_transform()
     eval_transform = build_eval_transform()
@@ -134,21 +135,21 @@ def main():
 
         if ep % args.eval_every == 0 or ep == args.episodes:
             metrics = evaluate_dogfacenet_val(model, eval_transform, device)
-            print(f"  [val @ episode {ep}] DogFaceNet {metrics}")
+            print(f"  [val @ episode {ep}] DogFaceNet {metrics}", flush=True)
             log_rows.append({"episode": ep, "dfn_val_rank1": metrics.rank1, "dfn_val_map": metrics.mAP,
                               "seconds": round(time.time() - t_start, 1)})
             if metrics.rank1 > best_rank1:
                 best_rank1 = metrics.rank1
                 torch.save({"model": model.state_dict(), "episode": ep, "dfn_val_rank1": best_rank1},
                            best_path)
-                print(f"  [저장] 새 최고 DogFaceNet val Rank-1={best_rank1:.4f} -> {best_path}")
+                print(f"  [저장] 새 최고 DogFaceNet val Rank-1={best_rank1:.4f} -> {best_path}", flush=True)
 
     LOG_CSV.parent.mkdir(parents=True, exist_ok=True)
     with LOG_CSV.open("w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=list(log_rows[0].keys()))
         writer.writeheader()
         writer.writerows(log_rows)
-    print(f"\n[완료] 로그: {LOG_CSV}, 최고 체크포인트: {best_path} (DogFaceNet val Rank-1={best_rank1:.4f})")
+    print(f"\n[완료] 로그: {LOG_CSV}, 최고 체크포인트: {best_path} (DogFaceNet val Rank-1={best_rank1:.4f})", flush=True)
 
 
 if __name__ == "__main__":

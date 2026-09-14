@@ -17,6 +17,7 @@ import sys
 import time
 from pathlib import Path
 
+sys.stdout.reconfigure(line_buffering=True)  # 파일로 리다이렉트해도 진행상황이 실시간으로 보이게
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import numpy as np

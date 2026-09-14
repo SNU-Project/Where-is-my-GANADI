@@ -3,8 +3,9 @@ from pathlib import Path
 
 import numpy as np
 import torch
-from PIL import Image
 from torch.utils.data import DataLoader, Dataset
+
+from src.data.image_cache import load_rgb
 
 
 class ImagePathDataset(Dataset):
@@ -16,8 +17,7 @@ class ImagePathDataset(Dataset):
         return len(self.paths)
 
     def __getitem__(self, idx):
-        img = Image.open(self.paths[idx]).convert("RGB")
-        return self.transform(img)
+        return self.transform(load_rgb(self.paths[idx]))
 
 
 @torch.no_grad()
