@@ -70,3 +70,22 @@ class BNNeckModel(nn.Module):
         bn_feat = self.bnneck(feat)
         logits = self.classifier(bn_feat)
         return bn_feat, logits
+
+
+class ProtoEmbedder(nn.Module):
+    """Prototypical Network용 임베더. 고정 개수 분류기가 없다 — 클래스 프로토타입(평균 임베딩)까지의
+    거리로 매 에피소드마다 즉석에서 분류 경계를 만들기 때문. E0/E1과 같은 ImageNet 사전학습에서
+    출발해 비교를 공정하게 유지한다 (초기화 조건 동일, 학습 방식만 다름)."""
+
+    def __init__(self, pretrained: bool = True):
+        super().__init__()
+        weights = ResNet50_Weights.IMAGENET1K_V2 if pretrained else None
+        backbone = resnet50(weights=weights)
+        self.features = nn.Sequential(*list(backbone.children())[:-1])
+        self.bn = nn.BatchNorm1d(2048)
+        self.transform = weights.transforms() if weights else None
+        self.out_dim = 2048
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        feat = torch.flatten(self.features(x), 1)
+        return self.bn(feat)
