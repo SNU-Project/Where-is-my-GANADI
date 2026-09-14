@@ -23,9 +23,19 @@ PetFace, Kaggle 품종 3종(Dog Breed Identification / Oxford-IIIT Pet / Dogs of
 
 > 원본 데이터는 저장소에 커밋하지 않습니다 (`.gitignore` 참고). `Data/` 아래에 배치하세요.
 
-## 환경
-- MacBook Pro M5 (Apple Silicon) · PyTorch MPS
-- 설치: `pip install -r requirements.txt`
+## 환경 설정
+
+```bash
+cd "DL PROJECT"
+python3 -m venv .venv
+source .venv/bin/activate          # Windows: .venv\Scripts\activate
+pip install -r requirements.txt    # 정확히 같은 버전이 필요하면 requirements-lock.txt 사용
+```
+
+- MacBook Pro M5 (Apple Silicon) 기준 PyTorch MPS 가속 확인됨 (`torch.backends.mps.is_available() == True`)
+- Apple Silicon이 아니면 `torch`가 자동으로 CPU(또는 CUDA)를 쓴다 — 코드 수정 불필요
+  (`src/models/backbones.py`의 `get_device()`가 자동 감지)
+- 확인: `python scripts/eval_reid.py --dataset mpdd` 실행 후 `Rank-1=...` 출력되면 정상
 
 ## 진행 상황
 - [x] 프로젝트 기획, 과제 요건 확정
