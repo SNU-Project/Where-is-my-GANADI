@@ -9,11 +9,14 @@ Base URL: https://apis.data.go.kr/1543061/abandonmentPublicService_v2
     2) pip install requests python-dotenv pillow
 
 사용 예:
-    # 최근 60일치 유기견(개) 공고 메타데이터만 수집
-    python scripts/fetch_shelter_api.py --days 60 --upkind dog
+    # 현재 "공고중"인 유기견(개) 전체 (날짜 제한 없음 = 완전한 현재 갤러리)
+    python scripts/fetch_shelter_api.py --upkind dog
 
     # 메타데이터 + 대표사진까지 다운로드
-    python scripts/fetch_shelter_api.py --days 60 --upkind dog --download-images
+    python scripts/fetch_shelter_api.py --upkind dog --download-images
+
+    # (선택) 과거 이력까지 보고 싶을 때만 날짜 제한 사용
+    python scripts/fetch_shelter_api.py --upkind dog --state "" --days 60
 """
 import argparse
 import csv
@@ -165,10 +168,14 @@ def download_images(rows: list[dict], img_dir: Path, sleep_sec: float = 0.15):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--days", type=int, default=60, help="구조날짜 기준 최근 N일 (기본 60)")
+    ap.add_argument("--days", type=int, default=None,
+                     help="구조날짜 기준 최근 N일로 제한 (기본: 제한 없음). "
+                          "--state notice(공고중)는 법적으로 공고 유지기간이 짧아 "
+                          "날짜 제한 없이 불러도 사실상 '현재 활성 공고 전체'와 같다 — "
+                          "완전한 갤러리를 만들 땐 --days를 생략하는 걸 권장.")
     ap.add_argument("--upkind", choices=["dog", "cat", "etc"], default="dog")
-    ap.add_argument("--state", choices=["", "notice", "protect"], default="",
-                     help="공고 상태 (빈값=전체, notice=공고중, protect=보호중)")
+    ap.add_argument("--state", choices=["", "notice", "protect"], default="notice",
+                     help="공고 상태 (빈값=전체, notice=공고중[기본값], protect=보호중)")
     ap.add_argument("--out-dir", default="Data/shelter")
     ap.add_argument("--download-images", action="store_true", help="대표사진까지 다운로드")
     ap.add_argument("--max-items", type=int, default=None, help="테스트용 상한 (전체 다운로드 전 확인용)")
@@ -176,13 +183,12 @@ def main():
 
     service_key = load_service_key()
 
-    end = datetime.now()
-    start = end - timedelta(days=args.days)
-    params = {
-        "upkind": UPKIND_CODE[args.upkind],
-        "bgnde": start.strftime("%Y%m%d"),
-        "endde": end.strftime("%Y%m%d"),
-    }
+    params = {"upkind": UPKIND_CODE[args.upkind]}
+    if args.days is not None:
+        end = datetime.now()
+        start = end - timedelta(days=args.days)
+        params["bgnde"] = start.strftime("%Y%m%d")
+        params["endde"] = end.strftime("%Y%m%d")
     if args.state:
         params["state"] = args.state
 
