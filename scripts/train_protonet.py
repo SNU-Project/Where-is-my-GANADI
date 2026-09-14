@@ -73,6 +73,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--episodes", type=int, default=600)
     ap.add_argument("--n-way", type=int, default=20)
+    ap.add_argument("--k-max", type=int, default=5)
     ap.add_argument("--q-max", type=int, default=4)
     ap.add_argument("--lr", type=float, default=1e-4)
     ap.add_argument("--eval-every", type=int, default=50)
@@ -87,7 +88,7 @@ def main():
 
     train_ds, num_classes, label_map = build_combined_train_set(train_transform)
     class_pools = group_by_label(train_ds.items)
-    sampler = EpisodeSampler(class_pools, n_way=args.n_way, q_max=args.q_max, seed=0)
+    sampler = EpisodeSampler(class_pools, n_way=args.n_way, k_max=args.k_max, q_max=args.q_max, seed=0)
     print(f"[info] 학습 풀: {num_classes}개체 (2장 미만 제외 후 에피소드 가능 {len(sampler.pools)}개체), "
           f"실제 n_way={sampler.n_way}")
 

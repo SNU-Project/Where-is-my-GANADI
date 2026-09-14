@@ -22,7 +22,7 @@ import torch
 
 from src.data.manifests import load_dogfacenet_split, load_mpdd_split
 from src.data.transforms import build_eval_transform
-from src.models.backbones import BNNeckModel, build_backbone, get_device
+from src.models.backbones import BNNeckModel, ProtoEmbedder, build_backbone, get_device
 from src.retrieval.extract import extract_features
 from src.retrieval.metrics import compute_distmat, evaluate_reid
 
@@ -37,10 +37,14 @@ def load_model(backbone_name: str, checkpoint: str | None):
     if checkpoint is None:
         return build_backbone(backbone_name)
     ckpt = torch.load(checkpoint, map_location="cpu")
-    model = BNNeckModel(num_classes=ckpt["num_classes"], pretrained=False)
+    if "num_classes" in ckpt:  # E1: BNNeckModel (분류기 포함)
+        model = BNNeckModel(num_classes=ckpt["num_classes"], pretrained=False)
+    else:  # E2: ProtoEmbedder (분류기 없음, 임베딩만)
+        model = ProtoEmbedder(pretrained=False)
     model.load_state_dict(ckpt["model"])
     model.eval()
-    print(f"[info] 체크포인트 로드: {checkpoint} (epoch={ckpt.get('epoch')}, "
+    step_key = "epoch" if "epoch" in ckpt else "episode"
+    print(f"[info] 체크포인트 로드: {checkpoint} ({step_key}={ckpt.get(step_key)}, "
           f"학습 시 DogFaceNet val Rank-1={ckpt.get('dfn_val_rank1'):.4f})")
     return model, build_eval_transform()
 
