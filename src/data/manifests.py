@@ -43,22 +43,23 @@ def load_dogfacenet_split(
     root: Path = Path("Data/DogFaceNet"),
     manifest_csv: Path = Path("metadata/dogfacenet_manifest.csv"),
     seed: int = 123,
+    group: str = "test",
 ) -> ReidSplit:
-    """DogFaceNet은 query/gallery 구분이 없어(개체 분류용) 개체(ID) 기준 test 그룹에서
-    이미지 1장을 무작위로 뽑아 query로, 나머지를 gallery로 쓰는 leave-one-out 방식을 쓴다.
-    camid는 이미지마다 전부 다른 값(전역 인덱스)을 줘서 카메라 기반 제외 규칙을 비활성화한다
-    (DogFaceNet에는 카메라 개념이 없음).
+    """DogFaceNet은 query/gallery 구분이 없어(개체 분류용) 개체(ID) 기준 그룹(기본 test, 학습 중
+    모니터링할 땐 group="val")에서 이미지 1장을 무작위로 뽑아 query로, 나머지를 gallery로 쓰는
+    leave-one-out 방식을 쓴다. camid는 이미지마다 전부 다른 값(전역 인덱스)을 줘서 카메라 기반
+    제외 규칙을 비활성화한다 (DogFaceNet에는 카메라 개념이 없음).
     """
     df = pd.read_csv(manifest_csv)
-    test_df = df[df.split_group == "test"].reset_index(drop=True)
+    test_df = df[df.split_group == group].reset_index(drop=True)
 
     rng = random.Random(seed)
     q_paths, q_pids, q_cams = [], [], []
     g_paths, g_pids, g_cams = [], [], []
     global_cam = 0
 
-    for dog_id, group in test_df.groupby("dog_id"):
-        rows = group.to_dict("records")
+    for dog_id, id_rows in test_df.groupby("dog_id"):
+        rows = id_rows.to_dict("records")
         rng.shuffle(rows)
         query_row, *gallery_rows = rows
         q_paths.append(root / query_row["relpath"])
