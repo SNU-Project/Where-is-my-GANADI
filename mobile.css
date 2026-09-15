@@ -1,3 +1,8 @@
+main { padding-top: 46px; }
+.intro { max-width: 760px; margin-bottom: 30px; }
+h1 { font-size: clamp(38px, 4.7vw, 58px); line-height: 1.08; margin: 10px 0 14px; }
+.intro > p:last-child { max-width: 560px; font-size: 16px; margin: 0; }
+
 @media (max-width: 600px) {
   .topbar { height: 60px; padding: 0 16px; }
   .brand { font-size: 17px; }
@@ -5,11 +10,11 @@
   .status { font-size: 0; gap: 0; }
   .status i { width: 9px; height: 9px; }
 
-  main { padding: 32px 14px 60px; }
-  .intro { margin-bottom: 25px; }
+  main { padding: 24px 14px 60px; }
+  .intro { margin-bottom: 20px; }
   .eyebrow { font-size: 11px; letter-spacing: .1em; }
-  h1 { font-size: clamp(34px, 10.5vw, 43px); line-height: 1.12; margin-top: 9px; }
-  .intro > p:last-child { font-size: 15px; margin-bottom: 0; }
+  h1 { font-size: clamp(30px, 8.8vw, 38px); line-height: 1.12; margin: 7px 0 10px; }
+  .intro > p:last-child { font-size: 14px; margin-bottom: 0; }
 
   .workspace { gap: 14px; }
   .panel { padding: 18px; border-radius: 18px; }
