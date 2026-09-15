@@ -73,7 +73,10 @@ def main():
     ap.add_argument("--weight-decay", type=float, default=5e-4)
     ap.add_argument("--label-smoothing", type=float, default=0.1)
     ap.add_argument("--num-workers", type=int, default=0)
+    ap.add_argument("--train-data", choices=["combined", "dogfacenet"], default="combined",
+                     help="combined=MPDD+DogFaceNet(기본), dogfacenet=DogFaceNet만 (도메인 불균형 대조실험용)")
     args = ap.parse_args()
+    include_mpdd = args.train_data == "combined"
 
     device = get_device()
     print(f"[info] device={device}")
@@ -81,16 +84,20 @@ def main():
     train_transform = build_train_transform()
     eval_transform = build_eval_transform()
 
-    train_ds, num_classes, label_map = build_combined_train_set(train_transform)
-    mpdd_val_ds = build_mpdd_val_closed_set(eval_transform, label_map)
-    print(f"[info] train: {len(train_ds)}장 / {num_classes}개체, MPDD val(closed-set): {len(mpdd_val_ds)}장")
+    train_ds, num_classes, label_map = build_combined_train_set(train_transform, include_mpdd=include_mpdd)
+    mpdd_val_loader = None
+    if include_mpdd:
+        mpdd_val_ds = build_mpdd_val_closed_set(eval_transform, label_map)
+        mpdd_val_loader = DataLoader(mpdd_val_ds, batch_size=args.batch_size, shuffle=False,
+                                      num_workers=args.num_workers)
+        print(f"[info] train: {len(train_ds)}장 / {num_classes}개체, MPDD val(closed-set): {len(mpdd_val_ds)}장")
+    else:
+        print(f"[info] train: {len(train_ds)}장 / {num_classes}개체 (DogFaceNet만, MPDD 미포함)")
 
     weights = class_balance_weights(train_ds.labels)
     sampler = WeightedRandomSampler(weights, num_samples=len(train_ds), replacement=True)
     train_loader = DataLoader(train_ds, batch_size=args.batch_size, sampler=sampler,
                                num_workers=args.num_workers)
-    mpdd_val_loader = DataLoader(mpdd_val_ds, batch_size=args.batch_size, shuffle=False,
-                                  num_workers=args.num_workers)
 
     model = BNNeckModel(num_classes=num_classes, pretrained=True).to(device)
     criterion = nn.CrossEntropyLoss(label_smoothing=args.label_smoothing)
@@ -101,7 +108,9 @@ def main():
     LOG_CSV.parent.mkdir(parents=True, exist_ok=True)
     log_rows = []
     best_rank1 = -1.0
-    best_path = CKPT_DIR / "E1_resnet50_bnneck.pt"
+    ckpt_name = "E1_resnet50_bnneck.pt" if include_mpdd else "E1_resnet50_bnneck_dfnonly.pt"
+    best_path = CKPT_DIR / ckpt_name
+    log_csv = LOG_CSV if include_mpdd else Path("metadata/train_log_E1_dfnonly.csv")
 
     for epoch in range(1, args.epochs + 1):
         t0 = time.time()
@@ -123,20 +132,19 @@ def main():
         train_loss = train_loss_sum / train_total
         train_acc = train_correct / train_total
 
-        val_loss, val_acc = evaluate_mpdd_val_closed_set(model, mpdd_val_loader, device)
+        row = {"epoch": epoch, "train_loss": train_loss, "train_acc": train_acc}
+        log_line = f"[epoch {epoch}/{args.epochs}] train_loss={train_loss:.3f} train_acc={train_acc:.3f}"
+        if mpdd_val_loader is not None:
+            val_loss, val_acc = evaluate_mpdd_val_closed_set(model, mpdd_val_loader, device)
+            row["mpdd_val_loss"], row["mpdd_val_acc"] = val_loss, val_acc
+            log_line += f" | MPDD val_loss={val_loss:.3f} val_acc={val_acc:.3f}"
         dfn_val_metrics = evaluate_dogfacenet_val_openset(model, eval_transform, device, args.batch_size)
+        row["dfn_val_rank1"], row["dfn_val_map"] = dfn_val_metrics.rank1, dfn_val_metrics.mAP
 
         elapsed = time.time() - t0
-        print(f"[epoch {epoch}/{args.epochs}] train_loss={train_loss:.3f} train_acc={train_acc:.3f} | "
-              f"MPDD val_loss={val_loss:.3f} val_acc={val_acc:.3f} | "
-              f"DogFaceNet val {dfn_val_metrics} | {elapsed:.1f}s")
-
-        log_rows.append({
-            "epoch": epoch, "train_loss": train_loss, "train_acc": train_acc,
-            "mpdd_val_loss": val_loss, "mpdd_val_acc": val_acc,
-            "dfn_val_rank1": dfn_val_metrics.rank1, "dfn_val_map": dfn_val_metrics.mAP,
-            "seconds": round(elapsed, 1),
-        })
+        row["seconds"] = round(elapsed, 1)
+        print(f"{log_line} | DogFaceNet val {dfn_val_metrics} | {elapsed:.1f}s")
+        log_rows.append(row)
 
         if dfn_val_metrics.rank1 > best_rank1:
             best_rank1 = dfn_val_metrics.rank1
@@ -144,11 +152,11 @@ def main():
                         "epoch": epoch, "dfn_val_rank1": best_rank1}, best_path)
             print(f"  [저장] 새 최고 DogFaceNet val Rank-1={best_rank1:.4f} -> {best_path}")
 
-    with LOG_CSV.open("w", newline="", encoding="utf-8") as f:
+    with log_csv.open("w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=list(log_rows[0].keys()))
         writer.writeheader()
         writer.writerows(log_rows)
-    print(f"\n[완료] 로그: {LOG_CSV}, 최고 체크포인트: {best_path} (DogFaceNet val Rank-1={best_rank1:.4f})")
+    print(f"\n[완료] 로그: {log_csv}, 최고 체크포인트: {best_path} (DogFaceNet val Rank-1={best_rank1:.4f})")
 
 
 if __name__ == "__main__":

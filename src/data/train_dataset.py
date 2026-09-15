@@ -8,8 +8,9 @@ from pathlib import Path
 
 import pandas as pd
 import torch
-from PIL import Image
 from torch.utils.data import Dataset
+
+from src.data.image_cache import load_rgb
 
 MPDD_ROOT = Path("Data/Multi-pose dog dataset/pytorch")
 DFN_ROOT = Path("Data/DogFaceNet")
@@ -34,8 +35,7 @@ class IdentityImageDataset(Dataset):
 
     def __getitem__(self, idx):
         item = self.items[idx]
-        img = Image.open(item.path).convert("RGB")
-        return self.transform(img), item.global_label
+        return self.transform(load_rgb(item.path)), item.global_label
 
     @property
     def labels(self) -> list:
@@ -57,22 +57,26 @@ def _load_dogfacenet(split_name: str):
     return df, DFN_ROOT
 
 
-def build_combined_train_set(transform):
-    """MPDD train + DogFaceNet train -> 전역 라벨로 합친 학습 데이터셋.
+def build_combined_train_set(transform, include_mpdd: bool = True):
+    """MPDD train(+선택) + DogFaceNet train -> 전역 라벨로 합친 학습 데이터셋.
+
+    include_mpdd=False로 주면 DogFaceNet만으로 학습 풀을 구성한다 — MPDD(9%) 대 DogFaceNet(91%)
+    비율 불균형이 에피소드 구성을 한쪽으로 쏠리게 만든다는 진단(D4)을 검증하기 위한 대조 실험용.
 
     반환: (dataset, num_classes, label_map)
     label_map: {(source, 원본 dog_id): 전역 라벨} — 나중에 val/test 매핑 확인용으로 남겨둠.
     """
-    mpdd_df, mpdd_root = _load_mpdd("train")
     dfn_df, dfn_root = _load_dogfacenet("train")
 
     label_map = {}
     items = []
-    for _, r in mpdd_df.iterrows():
-        key = ("mpdd", r.dog_id)
-        if key not in label_map:
-            label_map[key] = len(label_map)
-        items.append(LabeledImage(mpdd_root / r.relpath, label_map[key], "mpdd"))
+    if include_mpdd:
+        mpdd_df, mpdd_root = _load_mpdd("train")
+        for _, r in mpdd_df.iterrows():
+            key = ("mpdd", r.dog_id)
+            if key not in label_map:
+                label_map[key] = len(label_map)
+            items.append(LabeledImage(mpdd_root / r.relpath, label_map[key], "mpdd"))
     for _, r in dfn_df.iterrows():
         key = ("dogfacenet", r.dog_id)
         if key not in label_map:
