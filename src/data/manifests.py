@@ -73,3 +73,40 @@ def load_dogfacenet_split(
             global_cam += 1
 
     return ReidSplit("DogFaceNet", root, q_paths, q_pids, q_cams, g_paths, g_pids, g_cams)
+
+
+def load_shelter_split(
+    root: Path = Path("Data/shelter"),
+    manifest_csv: Path = Path("metadata/shelter_manifest_clean.csv"),
+    seed: int = 7,
+) -> ReidSplit:
+    """실제 animal.go.kr 공고 사진으로 진짜 사용 시나리오를 재현하는 테스트.
+
+    같은 유기견의 공고 사진이 보통 2장 등록돼 있다(대표사진 popfile1/2) — 이걸 각각 query/gallery로
+    나누면 "사용자가 사진 한 장을 올렸을 때, 같은 개의 다른 사진을 찾아내는지"를 실제 지저분한
+    현장 사진으로 검증할 수 있다. 학습·검증에 전혀 쓰이지 않은 완전히 새로운 도메인 테스트.
+    사진이 1장뿐인 공고(9건)는 query/gallery 쌍을 만들 수 없어 제외한다.
+    """
+    df = pd.read_csv(manifest_csv)
+    rng = random.Random(seed)
+    q_paths, q_pids, q_cams = [], [], []
+    g_paths, g_pids, g_cams = [], [], []
+    global_cam = 0
+
+    for _, r in df.iterrows():
+        photos = [p for p in str(r.photo_local_paths).split("|") if p]
+        if len(photos) < 2:
+            continue
+        rng.shuffle(photos)
+        pid = r.desertion_no
+        q_paths.append(root / photos[0])
+        q_pids.append(pid)
+        q_cams.append(global_cam)
+        global_cam += 1
+        for p in photos[1:]:
+            g_paths.append(root / p)
+            g_pids.append(pid)
+            g_cams.append(global_cam)
+            global_cam += 1
+
+    return ReidSplit("Shelter", root, q_paths, q_pids, q_cams, g_paths, g_pids, g_cams)

@@ -20,7 +20,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import torch
 
-from src.data.manifests import load_dogfacenet_split, load_mpdd_split
+from src.data.manifests import load_dogfacenet_split, load_mpdd_split, load_shelter_split
 from src.data.transforms import build_eval_transform
 from src.models.backbones import BNNeckModel, ProtoEmbedder, build_backbone, get_device
 from src.retrieval.extract import extract_features
@@ -58,6 +58,8 @@ def run_one(dataset: str, backbone_name: str, exp_name: str, batch_size: int = 3
         split = load_mpdd_split()
     elif dataset == "dogfacenet":
         split = load_dogfacenet_split()
+    elif dataset == "shelter":
+        split = load_shelter_split()
     else:
         raise ValueError(dataset)
 
@@ -105,7 +107,7 @@ def run_one(dataset: str, backbone_name: str, exp_name: str, batch_size: int = 3
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--dataset", choices=["mpdd", "dogfacenet", "both"], default="both")
+    ap.add_argument("--dataset", choices=["mpdd", "dogfacenet", "shelter", "both"], default="both")
     ap.add_argument("--backbone", default="resnet50_imagenet")
     ap.add_argument("--exp-name", default="E0_imagenet_baseline")
     ap.add_argument("--batch-size", type=int, default=32)
