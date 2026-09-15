@@ -27,6 +27,10 @@
         <div class="section-title">
           <span>01</span><div><h2 id="search-title">실종 정보 입력</h2><p>입력하지 않은 조건은 불일치로 계산하지 않습니다.</p></div>
         </div>
+        <div class="demo-picker" aria-labelledby="demo-title">
+          <div><b id="demo-title">빠른 데모</b><small>예시 반려견을 선택하면 검색 조건이 자동으로 채워집니다.</small></div>
+          <div id="demoOptions" class="demo-options"></div>
+        </div>
         <label class="dropzone" for="photo">
           <input id="photo" type="file" accept="image/*">
           <img id="preview" alt="선택한 반려견 사진 미리보기" hidden>
@@ -38,7 +42,7 @@
           <label>실종 날짜<input id="date" type="date"></label>
         </div>
         <button id="search" type="button">유사 후보 살펴보기 <span>→</span></button>
-        <p class="privacy">이 페이지는 기능 흐름을 보여주는 공개 체험판입니다. 선택한 사진과 입력값은 브라우저 밖으로 전송하거나 저장하지 않습니다.</p>
+        <p class="privacy">합성 모드에서는 브라우저 안에서만 동작합니다. Mac 검색 서버 연결 시 사진과 입력값은 검색을 위해 일시 전송되며 서버에 저장하지 않습니다.</p>
       </div>
 
       <div class="panel results-panel">
