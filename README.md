@@ -41,7 +41,10 @@ pip install -r requirements.txt    # 정확히 같은 버전이 필요하면 req
 - [x] 프로젝트 기획, 과제 요건 확정
 - [x] 데이터 확보 + EDA (MPDD, DogFaceNet, animal.go.kr)
 - [x] 평가 지표(CMC/mAP) + E0 베이스라인 (`metadata/results.csv`)
-- [ ] E1 임베딩 모델 파인튜닝
-- [ ] E2 Prototypical Network 학습
+- [x] E1 임베딩 모델 파인튜닝 (ResNet50+BNNeck, MPDD+DogFaceNet 통합 — **최종 채택 모델**)
+- [x] E2 Prototypical Network 학습 (E0/E1보다 낮은 성능 확인, 원인 분석 완료 — 채택 안 함)
 - [ ] 정성분석 + 데모 앱
 - [ ] 보고서 · 발표자료
+
+**현재 최고 모델**: E1 (`checkpoints/E1_resnet50_bnneck.pt`) — MPDD Rank-1 80.8%/mAP 69.2%,
+DogFaceNet Rank-1 87.4%/mAP 75.6% (`metadata/results.csv` 전체 비교 참고)
