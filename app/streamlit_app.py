@@ -1,8 +1,10 @@
 """찾아줘, 가나디 — 실종견 찾기 데모.
 
 사용자가 실종견 사진을 올리면, 국가동물보호정보시스템(animal.go.kr) 실제 공고 갤러리 중에서
-비슷한 개체 Top-5를 찾아 보여준다. 학습된 임베딩 모델(E1: ResNet50+BNNeck)로 사진을 벡터로
-바꾸고, 코사인 유사도로 순위를 매기는 방식 — src/retrieval/metrics.py와 동일한 원리를 그대로 쓴다.
+비슷한 개체 Top-5를 찾아 보여준다. 학습된 임베딩 모델(E1: ResNet50+BNNeck)의 코사인 유사도에
+색상 히스토그램 유사도를 섞어(alpha=0.75) 순위를 매긴다 — 임베딩은 "진짜 정답"을 잘 찾아내지만
+오답 후보끼리의 순서(예: 색깔이 완전히 다른 개가 상위권에 나오는 문제)는 보정이 안 돼서,
+전통적인 색상 비교를 더해 보완했다 (scripts/eval_color_blend.py로 검증, 실제 Rank-1도 개선됨).
 
 실행:
     streamlit run app/streamlit_app.py
@@ -21,10 +23,12 @@ from PIL import Image
 
 from src.data.transforms import build_eval_transform
 from src.models.backbones import BNNeckModel, get_device
+from src.retrieval.color import color_histogram
 
 CACHE_DIR = PROJECT_ROOT / "demo_cache"
 SHELTER_ROOT = PROJECT_ROOT / "Data" / "shelter"
 CHECKPOINT = PROJECT_ROOT / "checkpoints" / "E1_resnet50_bnneck.pt"
+COLOR_ALPHA = 0.75  # 임베딩 75% + 색상 25% (scripts/eval_color_blend.py로 검증한 값)
 
 st.set_page_config(page_title="찾아줘, 가나디", page_icon="🐕", layout="wide")
 
@@ -44,10 +48,11 @@ def load_model():
 @st.cache_data
 def load_gallery():
     embeddings = np.load(CACHE_DIR / "gallery_embeddings.npy")
+    color_hists = np.load(CACHE_DIR / "gallery_color_hists.npy")
     index = pd.read_csv(CACHE_DIR / "gallery_index.csv")
     meta = pd.read_csv(CACHE_DIR / "gallery_meta.csv")
     index = index.merge(meta, on="desertion_no", how="left")
-    return embeddings, index
+    return embeddings, color_hists, index
 
 
 def embed_query(img: Image.Image, model, transform, device) -> np.ndarray:
@@ -79,7 +84,7 @@ def main():
         return
 
     model, transform, device = load_model()
-    embeddings, index = load_gallery()
+    embeddings, color_hists, index = load_gallery()
 
     with st.sidebar:
         st.header("검색 조건 (선택)")
@@ -110,6 +115,7 @@ def main():
         t0 = time.time()
         with st.spinner("검색 중..."):
             q_feat = embed_query(query_img, model, transform, device)
+            q_hist = color_histogram(query_img.convert("RGB"))
 
             mask = pd.Series(True, index=index.index)
             if sex != "전체":
@@ -121,10 +127,12 @@ def main():
                 mask[:] = True
 
             cand_idx = index[mask].index.to_numpy()
-            sims = embeddings[cand_idx] @ q_feat  # 둘 다 L2 정규화됨 -> 내적 = 코사인 유사도
+            emb_sim = embeddings[cand_idx] @ q_feat  # 둘 다 L2 정규화됨 -> 내적 = 코사인 유사도
+            color_sim = np.minimum(color_hists[cand_idx], q_hist).sum(axis=1)  # 히스토그램 교집합
+            final_sim = COLOR_ALPHA * emb_sim + (1 - COLOR_ALPHA) * color_sim
 
             cand = index.loc[cand_idx].copy()
-            cand["similarity"] = sims
+            cand["similarity"] = final_sim
             # 같은 개체(desertion_no)는 가장 잘 맞는 사진 하나만 남긴다
             best_per_dog = cand.sort_values("similarity", ascending=False).drop_duplicates("desertion_no")
             top5 = best_per_dog.head(5)

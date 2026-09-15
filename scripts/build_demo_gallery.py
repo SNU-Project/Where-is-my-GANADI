@@ -11,8 +11,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import numpy as np
 import pandas as pd
+from PIL import Image
 
 from src.models.backbones import get_device
+from src.retrieval.color import color_histogram
 from src.retrieval.extract import extract_features
 
 CACHE_DIR = Path("demo_cache")
@@ -45,11 +47,16 @@ def main():
     feats = extract_features(paths, model, transform, device, args.batch_size)
     feats = feats / (np.linalg.norm(feats, axis=1, keepdims=True) + 1e-12)  # L2 정규화 저장
 
+    print("[info] 색상 히스토그램 계산 중 (임베딩만으로는 안 잡히는 색깔 유사도 보완, D5 피드백 반영)...")
+    hists = np.stack([color_histogram(Image.open(p).convert("RGB")) for p in paths])
+
     CACHE_DIR.mkdir(parents=True, exist_ok=True)
     np.save(CACHE_DIR / "gallery_embeddings.npy", feats)
+    np.save(CACHE_DIR / "gallery_color_hists.npy", hists)
     photo_df.to_csv(CACHE_DIR / "gallery_index.csv", index=False)
     df.to_csv(CACHE_DIR / "gallery_meta.csv", index=False)
-    print(f"[완료] {CACHE_DIR}/gallery_embeddings.npy ({feats.shape}), gallery_index.csv, gallery_meta.csv")
+    print(f"[완료] {CACHE_DIR}/gallery_embeddings.npy ({feats.shape}), "
+          f"gallery_color_hists.npy ({hists.shape}), gallery_index.csv, gallery_meta.csv")
 
 
 if __name__ == "__main__":

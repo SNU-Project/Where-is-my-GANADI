@@ -16,8 +16,8 @@ from PIL import Image
 
 from src.data.manifests import load_shelter_split
 from src.models.backbones import get_device
+from src.retrieval.color import color_histogram
 from src.retrieval.extract import extract_features
-from src.retrieval.metrics import compute_distmat
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from eval_reid import load_model  # noqa: E402
@@ -28,6 +28,7 @@ def main():
     ap.add_argument("--checkpoint", default=None)
     ap.add_argument("--n", type=int, default=6, help="시연할 쿼리 개수")
     ap.add_argument("--seed", type=int, default=0)
+    ap.add_argument("--alpha", type=float, default=0.75, help="임베딩 가중치 (1.0=색상 미반영)")
     ap.add_argument("--out", default="docs/eda/14_shelter_demo_search.png")
     args = ap.parse_args()
 
@@ -37,7 +38,18 @@ def main():
 
     q_feats = extract_features(split.query_paths, model, transform, device, 32)
     g_feats = extract_features(split.gallery_paths, model, transform, device, 32)
-    distmat = compute_distmat(q_feats, g_feats)
+    q_feats = q_feats / (np.linalg.norm(q_feats, axis=1, keepdims=True) + 1e-12)
+    g_feats = g_feats / (np.linalg.norm(g_feats, axis=1, keepdims=True) + 1e-12)
+    emb_sim = q_feats @ g_feats.T
+
+    q_hists = np.stack([color_histogram(Image.open(p).convert("RGB")) for p in split.query_paths])
+    g_hists = np.stack([color_histogram(Image.open(p).convert("RGB")) for p in split.gallery_paths])
+    color_sim = np.zeros_like(emb_sim)
+    for i in range(len(q_hists)):
+        color_sim[i] = np.minimum(g_hists, q_hists[i]).sum(axis=1)
+
+    final_sim = args.alpha * emb_sim + (1 - args.alpha) * color_sim
+    distmat = 1 - final_sim
 
     g_pids = np.asarray(split.gallery_pids)
     rng = np.random.default_rng(args.seed)
