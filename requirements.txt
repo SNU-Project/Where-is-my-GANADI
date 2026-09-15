@@ -1,0 +1,24 @@
+# 데이터 수집 / EDA
+requests
+python-dotenv
+pillow
+numpy
+pandas
+scipy
+matplotlib
+datasets
+huggingface_hub
+
+# 노트북
+jupyter
+nbformat
+nbconvert
+
+# 모델 학습 (D2~)
+torch
+torchvision
+timm
+scikit-learn
+
+# 데모 (D5~)
+streamlit
