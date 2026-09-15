@@ -10,6 +10,7 @@
 *.ckpt
 *.onnx
 checkpoints/
+demo_cache/
 runs/
 outputs/
 wandb/

@@ -37,13 +37,21 @@ pip install -r requirements.txt    # 정확히 같은 버전이 필요하면 req
   (`src/models/backbones.py`의 `get_device()`가 자동 감지)
 - 확인: `python scripts/eval_reid.py --dataset mpdd` 실행 후 `Rank-1=...` 출력되면 정상
 
+## 데모 앱 실행
+
+```bash
+python scripts/build_demo_gallery.py   # 최초 1회: 갤러리 임베딩 캐시 생성
+streamlit run app/streamlit_app.py     # http://localhost:8501
+```
+
 ## 진행 상황
 - [x] 프로젝트 기획, 과제 요건 확정
 - [x] 데이터 확보 + EDA (MPDD, DogFaceNet, animal.go.kr)
 - [x] 평가 지표(CMC/mAP) + E0 베이스라인 (`metadata/results.csv`)
 - [x] E1 임베딩 모델 파인튜닝 (ResNet50+BNNeck, MPDD+DogFaceNet 통합 — **최종 채택 모델**)
 - [x] E2 Prototypical Network 학습 (E0/E1보다 낮은 성능 확인, 원인 분석 완료 — 채택 안 함)
-- [ ] 정성분석 + 데모 앱
+- [x] 데모 앱 (`app/streamlit_app.py`) — 실제 보호소 사진으로 end-to-end 동작 확인
+- [ ] 정성분석 (실패 사례)
 - [ ] 보고서 · 발표자료
 
 **현재 최고 모델**: E1 (`checkpoints/E1_resnet50_bnneck.pt`) — MPDD Rank-1 80.8%/mAP 69.2%,
