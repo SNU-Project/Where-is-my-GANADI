@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="사진과 발견 정보를 함께 비교하는 PetFinder 공개 정적 데모">
+  <meta property="og:title" content="PetFinder 공개 데모">
+  <meta property="og:description" content="실종견 사진으로 보호 공고 후보를 좁혀보는 안전한 정적 체험판">
+  <title>PetFinder · 공개 데모</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="./" aria-label="PetFinder 처음으로"><span>PF</span> PetFinder</a>
+    <div id="connectionStatus" class="status"><i></i> 서버 연결 확인 중</div>
+  </header>
+
+  <main>
+    <section class="intro">
+      <p class="eyebrow">사진에서 단서로, 단서에서 만남으로</p>
+      <h1>잃어버린 반려견과 닮은<br>보호 공고를 빠르게 찾아보세요.</h1>
+      <p>사진을 중심으로 특징·장소·날짜를 함께 비교해 사람이 확인할 후보를 좁혀주는 검색 경험입니다.</p>
+    </section>
+
+    <section class="workspace" aria-labelledby="search-title">
+      <div class="panel input-panel">
+        <div class="section-title">
+          <span>01</span><div><h2 id="search-title">실종 정보 입력</h2><p>입력하지 않은 조건은 불일치로 계산하지 않습니다.</p></div>
+        </div>
+        <label class="dropzone" for="photo">
+          <input id="photo" type="file" accept="image/*">
+          <img id="preview" alt="선택한 반려견 사진 미리보기" hidden>
+          <span id="dropPrompt"><b>사진 선택</b><small>JPG·PNG · 사진은 서버로 전송되지 않습니다</small></span>
+        </label>
+        <div class="fields">
+          <label>특징<input id="features" placeholder="예: 흰색 털, 갈색 귀, 빨간 목줄"></label>
+          <label>실종 장소<input id="location" placeholder="예: 서울 동작구 사당동"></label>
+          <label>실종 날짜<input id="date" type="date"></label>
+        </div>
+        <button id="search" type="button">유사 후보 살펴보기 <span>→</span></button>
+        <p class="privacy">이 페이지는 기능 흐름을 보여주는 공개 체험판입니다. 선택한 사진과 입력값은 브라우저 밖으로 전송하거나 저장하지 않습니다.</p>
+      </div>
+
+      <div class="panel results-panel">
+        <div class="section-title">
+          <span>02</span><div><h2>후보 결과</h2><p id="resultState">검색 전 예시 후보를 표시합니다.</p></div>
+        </div>
+        <div id="results" class="results" aria-live="polite"></div>
+        <aside class="notice"><b>꼭 확인해 주세요</b><p>인공지능 검색 결과는 동일 개체를 확정하지 않습니다. 보호소 공고와 실제 동물을 반드시 직접 확인해야 합니다.</p></aside>
+      </div>
+    </section>
+
+    <section class="proof" aria-label="프로젝트 기준선">
+      <div><strong>14,810</strong><span>검색 기준 사진</span></div>
+      <div><strong>69.75%</strong><span>Recall@1 기준선</span></div>
+      <div><strong>73.53%</strong><span>Recall@5 기준선</span></div>
+      <p>같은 보호 공고의 다른 사진을 찾는 기술 기준선이며 실제 동일 개체 판정 정확도가 아닙니다.</p>
+    </section>
+  </main>
+
+  <footer>PetFinder · SNU Deep Learning Project <span>공개 가능한 합성 정보만 사용</span></footer>
+  <script src="./app.js"></script>
+</body>
+</html>
