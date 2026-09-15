@@ -1,3 +1,4 @@
+.intro { display: none !important; }
 main { padding-top: 28px; }
 .intro { max-width: 760px; margin-bottom: 30px; }
 h1 { font-size: clamp(38px, 4.7vw, 58px); line-height: 1.08; margin: 10px 0 14px; }
