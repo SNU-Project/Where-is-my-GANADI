@@ -43,13 +43,19 @@ class BNNeckModel(nn.Module):
     BN을 거친 특징이 분류 경계 뿐 아니라 검색(코사인 거리)에도 더 잘 맞는다는 게 원 논문의 핵심 트릭.
     """
 
-    def __init__(self, num_classes: int, pretrained: bool = True):
+    def __init__(self, num_classes: int, pretrained: bool = True, init_backbone_path: str | None = None):
         super().__init__()
         weights = ResNet50_Weights.IMAGENET1K_V2 if pretrained else None
         backbone = resnet50(weights=weights)
         self.features = nn.Sequential(*list(backbone.children())[:-1])
         self.transform = weights.transforms() if weights else None
         self.out_dim = 2048
+
+        if init_backbone_path is not None:
+            # ImageNet 대신, 품종 분류로 미리 파인튜닝된 conv 스택(예: Stanford Dogs)에서 시작 —
+            # identity CE만으로는 품종/색깔 유사성이 학습 신호에 전혀 안 들어간다는 진단 결과에 따른 조치.
+            state = torch.load(init_backbone_path, map_location="cpu")
+            self.features.load_state_dict(state)
 
         self.bnneck = nn.BatchNorm1d(self.out_dim)
         self.bnneck.bias.requires_grad_(False)  # BNNeck 표준: bias 학습 안 함

@@ -75,6 +75,9 @@ def main():
     ap.add_argument("--num-workers", type=int, default=0)
     ap.add_argument("--train-data", choices=["combined", "dogfacenet"], default="combined",
                      help="combined=MPDD+DogFaceNet(기본), dogfacenet=DogFaceNet만 (도메인 불균형 대조실험용)")
+    ap.add_argument("--init-backbone", default=None,
+                     help="ImageNet 대신 이 경로의 conv 백본(state_dict)에서 시작 (예: 품종 분류 사전학습)")
+    ap.add_argument("--ckpt-suffix", default=None, help="체크포인트/로그 파일명에 덧붙일 태그")
     args = ap.parse_args()
     include_mpdd = args.train_data == "combined"
 
@@ -99,7 +102,8 @@ def main():
     train_loader = DataLoader(train_ds, batch_size=args.batch_size, sampler=sampler,
                                num_workers=args.num_workers)
 
-    model = BNNeckModel(num_classes=num_classes, pretrained=True).to(device)
+    model = BNNeckModel(num_classes=num_classes, pretrained=True,
+                         init_backbone_path=args.init_backbone).to(device)
     criterion = nn.CrossEntropyLoss(label_smoothing=args.label_smoothing)
     optimizer = torch.optim.AdamW(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epochs)
@@ -108,9 +112,11 @@ def main():
     LOG_CSV.parent.mkdir(parents=True, exist_ok=True)
     log_rows = []
     best_rank1 = -1.0
-    ckpt_name = "E1_resnet50_bnneck.pt" if include_mpdd else "E1_resnet50_bnneck_dfnonly.pt"
+    tag = "" if include_mpdd else "_dfnonly"
+    tag += f"_{args.ckpt_suffix}" if args.ckpt_suffix else ""
+    ckpt_name = f"E1_resnet50_bnneck{tag}.pt"
     best_path = CKPT_DIR / ckpt_name
-    log_csv = LOG_CSV if include_mpdd else Path("metadata/train_log_E1_dfnonly.csv")
+    log_csv = Path(f"metadata/train_log_E1{tag}.csv")
 
     for epoch in range(1, args.epochs + 1):
         t0 = time.time()

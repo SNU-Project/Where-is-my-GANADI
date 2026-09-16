@@ -27,7 +27,7 @@ from src.retrieval.color import color_histogram
 
 CACHE_DIR = PROJECT_ROOT / "demo_cache"
 SHELTER_ROOT = PROJECT_ROOT / "Data" / "shelter"
-CHECKPOINT = PROJECT_ROOT / "checkpoints" / "E1_resnet50_bnneck.pt"
+CHECKPOINT = PROJECT_ROOT / "checkpoints" / "E1_resnet50_bnneck_breedpretrain.pt"
 COLOR_ALPHA = 0.75  # 임베딩 75% + 색상 25% (scripts/eval_color_blend.py로 검증한 값)
 
 st.set_page_config(page_title="찾아줘, 가나디", page_icon="🐕", layout="wide")

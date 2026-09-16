@@ -26,7 +26,10 @@ def main():
     ap.add_argument("--checkpoint", default="checkpoints/E1_resnet50_bnneck.pt")
     ap.add_argument("--manifest", default="metadata/shelter_manifest_clean.csv")
     ap.add_argument("--batch-size", type=int, default=32)
+    ap.add_argument("--cache-dir", default="demo_cache", help="출력 캐시 디렉토리 (비교 실험 시 별도 경로 지정)")
     args = ap.parse_args()
+    global CACHE_DIR
+    CACHE_DIR = Path(args.cache_dir)
 
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     from eval_reid import load_model  # noqa: E402
