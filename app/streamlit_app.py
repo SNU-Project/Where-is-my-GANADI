@@ -1,7 +1,7 @@
 """찾아줘, 가나디 — 실종견 찾기 데모.
 
 사용자가 실종견 사진을 올리면, 국가동물보호정보시스템(animal.go.kr) 실제 공고 갤러리 중에서
-비슷한 개체 Top-5를 찾아 보여준다. 학습된 임베딩 모델(E1: ResNet50+BNNeck)의 코사인 유사도에
+비슷한 개체 Top-10을 찾아 보여준다. 학습된 임베딩 모델(E4: ResNet50+BNNeck+Triplet)의 코사인 유사도에
 색상 히스토그램 유사도를 섞어(alpha=0.75) 순위를 매긴다 — 임베딩은 "진짜 정답"을 잘 찾아내지만
 오답 후보끼리의 순서(예: 색깔이 완전히 다른 개가 상위권에 나오는 문제)는 보정이 안 돼서,
 전통적인 색상 비교를 더해 보완했다 (scripts/eval_color_blend.py로 검증, 실제 Rank-1도 개선됨).
@@ -29,6 +29,7 @@ CACHE_DIR = PROJECT_ROOT / "demo_cache"
 SHELTER_ROOT = PROJECT_ROOT / "Data" / "shelter"
 CHECKPOINT = PROJECT_ROOT / "checkpoints" / "E1_resnet50_bnneck_breedpretrain_triplet.pt"
 COLOR_ALPHA = 0.75  # 임베딩 75% + 색상 25% (scripts/eval_color_blend.py로 검증한 값)
+TOP_K = 10  # 실제 사진 재현 테스트: 진짜 정답이 순위 100위 안쪽까지는 종종 들어와, 5보다 넉넉하게 보여준다
 
 st.set_page_config(page_title="찾아줘, 가나디", page_icon="🐕", layout="wide")
 
@@ -116,7 +117,7 @@ def main():
     )
 
     if not uploaded:
-        st.info("사진을 올리면 비슷한 개체 Top-5를 보여드립니다. "
+        st.info(f"사진을 올리면 비슷한 개체 Top-{TOP_K}를 보여드립니다. "
                  "**여러 각도·자세의 사진을 함께 올리면 정확도가 크게 올라가요** "
                  "(자체 검증: 1장 대비 2장이면 정확도가 확 뛰고, 3장부터는 거의 최대치예요).")
         return
@@ -156,21 +157,23 @@ def main():
             cand["similarity"] = final_sim
             # 같은 개체(desertion_no)는 가장 잘 맞는 사진 하나만 남긴다
             best_per_dog = cand.sort_values("similarity", ascending=False).drop_duplicates("desertion_no")
-            top5 = best_per_dog.head(5)
+            top_candidates = best_per_dog.head(TOP_K)
 
         st.success(f"검색 완료 ({time.time() - t0:.1f}초, 후보 {mask.sum()}건 중에서)")
-        st.subheader("가장 비슷한 후보 Top-5")
+        st.subheader(f"가장 비슷한 후보 Top-{TOP_K}")
 
-        cols = st.columns(5)
-        for col, (_, r) in zip(cols, top5.iterrows()):
-            with col:
-                st.image(str(SHELTER_ROOT / r.relpath), use_container_width=True)
-                st.metric("유사도", f"{r.similarity*100:.1f}%")
-                st.markdown(f"**{r.kind_nm}** · {r.sex_cd} · {r.age}")
-                st.caption(f"{r.care_nm}\n{r.care_addr}\n☎ {r.care_tel}")
-                if isinstance(r.special_mark, str) and r.special_mark.strip():
-                    st.caption(f"특징: {r.special_mark}")
-                st.caption(f"공고번호: {r.notice_no}")
+        rows = [top_candidates.iloc[i:i + 5] for i in range(0, len(top_candidates), 5)]
+        for row_df in rows:
+            cols = st.columns(5)
+            for col, (_, r) in zip(cols, row_df.iterrows()):
+                with col:
+                    st.image(str(SHELTER_ROOT / r.relpath), use_container_width=True)
+                    st.metric("유사도", f"{r.similarity*100:.1f}%")
+                    st.markdown(f"**{r.kind_nm}** · {r.sex_cd} · {r.age}")
+                    st.caption(f"{r.care_nm}\n{r.care_addr}\n☎ {r.care_tel}")
+                    if isinstance(r.special_mark, str) and r.special_mark.strip():
+                        st.caption(f"특징: {r.special_mark}")
+                    st.caption(f"공고번호: {r.notice_no}")
 
 
 if __name__ == "__main__":
