@@ -5,16 +5,21 @@
 import numpy as np
 from PIL import Image
 
-HUE_BINS = 16
-SAT_BINS = 8
+HUE_BINS = 12
+SAT_BINS = 6
+VAL_BINS = 6
 
 
 def color_histogram(img: Image.Image, size: int = 64) -> np.ndarray:
-    """HSV 2D(색상×채도) 히스토그램. 채도를 같이 써서 흰색/검정/회색(무채색)과
-    실제 유채색을 구분한다. 밝기(V)는 조명 차이에 민감해 제외."""
+    """HSV 3D(색상×채도×밝기) 히스토그램.
+
+    원래는 밝기(V)를 뺐었다("조명 차이에 민감해서") — 그런데 채도(S)만으로는 흰색/회색/검정색이
+    전부 "저채도"로 뭉쳐 서로 구분이 안 됨(실사용 사진 진단에서 확인: 회색 푸들 쿼리가 흰색 개들에게
+    전부 밀림). V를 다시 넣어 무채색 사이의 밝기 차이(흰색 vs 회색 vs 검정)를 구분하게 한다."""
     hsv = np.asarray(img.convert("HSV").resize((size, size)))
-    h, s = hsv[..., 0].ravel(), hsv[..., 1].ravel()
-    hist, _, _ = np.histogram2d(h, s, bins=[HUE_BINS, SAT_BINS], range=[[0, 255], [0, 255]])
+    h, s, v = hsv[..., 0].ravel(), hsv[..., 1].ravel(), hsv[..., 2].ravel()
+    hist, _ = np.histogramdd([h, s, v], bins=[HUE_BINS, SAT_BINS, VAL_BINS],
+                              range=[[0, 255], [0, 255], [0, 255]])
     hist = hist / (hist.sum() + 1e-9)
     return hist.ravel()
 

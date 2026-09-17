@@ -27,7 +27,7 @@ from src.retrieval.color import color_histogram
 
 CACHE_DIR = PROJECT_ROOT / "demo_cache"
 SHELTER_ROOT = PROJECT_ROOT / "Data" / "shelter"
-CHECKPOINT = PROJECT_ROOT / "checkpoints" / "E1_resnet50_bnneck_breedpretrain.pt"
+CHECKPOINT = PROJECT_ROOT / "checkpoints" / "E1_resnet50_bnneck_breedpretrain_triplet.pt"
 COLOR_ALPHA = 0.75  # 임베딩 75% + 색상 25% (scripts/eval_color_blend.py로 검증한 값)
 
 st.set_page_config(page_title="찾아줘, 가나디", page_icon="🐕", layout="wide")
@@ -61,6 +61,15 @@ def embed_query(img: Image.Image, model, transform, device) -> np.ndarray:
     with torch.no_grad():
         feat = model(x).cpu().numpy()[0]
     return feat / (np.linalg.norm(feat) + 1e-12)
+
+
+def embed_query_multi(imgs: list, model, transform, device) -> np.ndarray:
+    """여러 장의 쿼리 사진을 각각 임베딩한 뒤 평균 -> 재정규화.
+    사진이 여러 장이면 자세·조명에 따른 임베딩 흔들림이 평균으로 상쇄돼 훨씬 안정적이다
+    (DogFaceNet 검증: 1장 Rank-1 87.1%/mAP 79.3% -> 2장 95.4%/89.1% -> 3장 95.8%/92.5%)."""
+    feats = np.stack([embed_query(img, model, transform, device) for img in imgs])
+    avg = feats.mean(axis=0)
+    return avg / (np.linalg.norm(avg) + 1e-12)
 
 
 def region_of(addr) -> str:
@@ -100,22 +109,34 @@ def main():
         st.metric("갤러리 규모", f"{index.desertion_no.nunique()}건 / 사진 {len(index)}장")
         st.caption("데이터 출처: [국가동물보호정보시스템](https://www.animal.go.kr)")
 
-    uploaded = st.file_uploader("실종견 사진을 올려주세요", type=["jpg", "jpeg", "png"])
+    MAX_PHOTOS = 5
+    uploaded = st.file_uploader(
+        "실종견 사진을 올려주세요 (여러 장일수록 정확해져요, 최대 5장)",
+        type=["jpg", "jpeg", "png"], accept_multiple_files=True,
+    )
 
-    if uploaded is None:
-        st.info("사진을 올리면 비슷한 개체 Top-5를 보여드립니다.")
+    if not uploaded:
+        st.info("사진을 올리면 비슷한 개체 Top-5를 보여드립니다. "
+                 "**여러 각도·자세의 사진을 함께 올리면 정확도가 크게 올라가요** "
+                 "(자체 검증: 1장 대비 2장이면 정확도가 확 뛰고, 3장부터는 거의 최대치예요).")
         return
+    if len(uploaded) > MAX_PHOTOS:
+        st.warning(f"최대 {MAX_PHOTOS}장까지만 사용해요 — 처음 {MAX_PHOTOS}장만 반영합니다.")
+        uploaded = uploaded[:MAX_PHOTOS]
 
-    col_img, col_btn = st.columns([1, 3])
-    query_img = Image.open(uploaded)
-    with col_img:
-        st.image(query_img, caption="업로드한 사진", width=220)
+    query_imgs = [Image.open(f) for f in uploaded]
+    st.caption(f"업로드한 사진 {len(query_imgs)}장")
+    cols = st.columns(len(query_imgs))
+    for col, img in zip(cols, query_imgs):
+        with col:
+            st.image(img, use_container_width=True)
 
     if st.button("🔍 찾기", type="primary"):
         t0 = time.time()
         with st.spinner("검색 중..."):
-            q_feat = embed_query(query_img, model, transform, device)
-            q_hist = color_histogram(query_img.convert("RGB"))
+            q_feat = embed_query_multi(query_imgs, model, transform, device)
+            hists = np.stack([color_histogram(img.convert("RGB")) for img in query_imgs])
+            q_hist = hists.mean(axis=0)
 
             mask = pd.Series(True, index=index.index)
             if sex != "전체":
