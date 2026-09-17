@@ -1,0 +1,59 @@
+.intro { display: none !important; }
+main { padding-top: 28px; }
+.intro { max-width: 760px; margin-bottom: 30px; }
+h1 { font-size: clamp(38px, 4.7vw, 58px); line-height: 1.08; margin: 10px 0 14px; }
+.intro > p:last-child { max-width: 560px; font-size: 16px; margin: 0; }
+
+@media (max-width: 600px) {
+  .topbar { height: 60px; padding: 0 16px; }
+  .brand { font-size: 17px; }
+  .brand span { width: 31px; height: 31px; }
+  .status { font-size: 0; gap: 0; }
+  .status i { width: 9px; height: 9px; }
+
+  main { padding: 14px 14px 60px; }
+  .intro { margin-bottom: 20px; }
+  .eyebrow { font-size: 11px; letter-spacing: .1em; }
+  h1 { font-size: clamp(30px, 8.8vw, 38px); line-height: 1.12; margin: 7px 0 10px; }
+  .intro > p:last-child { font-size: 14px; margin-bottom: 0; }
+
+  .workspace { gap: 14px; }
+  .panel { padding: 18px; border-radius: 18px; }
+  .section-title { gap: 10px; margin-bottom: 18px; }
+  .section-title h2 { font-size: 20px; }
+  .section-title p { font-size: 12px; }
+
+  .demo-picker { margin-bottom: 16px; }
+  .demo-options { grid-template-columns: 1fr; gap: 7px; }
+  .demo-option { grid-template-columns: 54px 1fr; padding: 7px 9px; }
+  .demo-option img { width: 54px; height: 48px; }
+  .demo-option small { font-size: 10px; }
+  .demo-option b { font-size: 13px; }
+
+  .dropzone { height: 190px; }
+  .fields { gap: 11px; margin: 16px 0; }
+  .fields input { padding: 12px; font-size: 16px; }
+  button { min-height: 50px; font-size: 15px; }
+  .privacy { font-size: 10px; line-height: 1.5; }
+
+  .candidate { grid-template-columns: 64px 1fr; gap: 11px; padding: 10px; }
+  .dog { width: 64px; height: 64px; }
+  .candidate h3 { font-size: 14px; }
+  .candidate p { font-size: 11px; }
+  .score { grid-column: 2; display: flex; align-items: baseline; gap: 7px; text-align: left; }
+  .score strong { font-size: 20px; }
+  .score small { display: inline; }
+  .notice { padding: 14px; }
+
+  .proof { grid-template-columns: 1fr; gap: 13px; padding: 20px; }
+  .proof div { grid-template-columns: auto 1fr; gap: 10px; align-items: baseline; }
+  .proof strong { font-size: 24px; }
+  .proof p { grid-column: auto; }
+  footer { padding: 22px 16px; display: grid; gap: 5px; }
+}
+
+@media (max-width: 600px) {
+  .photo-grid { grid-template-columns: repeat(4, 1fr); gap: 5px; }
+  .region-row { grid-template-columns: 1fr; }
+  .fields select { padding: 12px; font-size: 16px; }
+}

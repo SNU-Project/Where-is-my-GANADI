@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="사진과 발견 정보를 함께 비교하는 PetFinder 공개 정적 데모">
+  <meta property="og:title" content="PetFinder 공개 데모">
+  <meta property="og:description" content="실종견 사진으로 보호 공고 후보를 좁혀보는 안전한 정적 체험판">
+  <title>PetFinder · 공개 데모</title>
+  <link rel="stylesheet" href="./styles.css?v=2">
+  <link rel="stylesheet" href="./mobile.css?v=4">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="./" aria-label="PetFinder 처음으로"><span>PF</span> PetFinder</a>
+    <div id="connectionStatus" class="status"><i></i> 서버 연결 확인 중</div>
+  </header>
+
+  <main>
+    <section class="workspace" aria-labelledby="search-title">
+      <div class="panel input-panel">
+        <div class="section-title">
+          <span>01</span><div><h2 id="search-title">실종 정보 입력</h2><p>입력하지 않은 조건은 불일치로 계산하지 않습니다.</p></div>
+        </div>
+        <div class="demo-picker" aria-labelledby="demo-title">
+          <div><b id="demo-title">빠른 데모</b><small>예시 반려견을 선택하면 검색 조건이 자동으로 채워집니다.</small></div>
+          <div id="demoOptions" class="demo-options"></div>
+        </div>
+        <div class="photo-picker">
+          <input id="photo" type="file" accept="image/*" multiple>
+          <div id="photoGrid" class="photo-grid" aria-live="polite"></div>
+          <p class="field-hint">여러 각도 사진을 최대 <b>5장</b>까지 넣을 수 있어요. 작은 사진도 잘리지 않고 그대로 보여요.</p>
+        </div>
+        <div class="fields">
+          <label>강아지 종 <em>필수</em>
+            <input id="breed" list="breedList" autocomplete="off" placeholder="눌러서 선택 · 모르면 ‘모름’">
+            <datalist id="breedList"></datalist>
+          </label>
+          <label>특징 <small>선택</small><input id="features" placeholder="예: 흰색 털, 갈색 귀, 빨간 목줄"></label>
+          <fieldset class="region">
+            <legend>실종 장소 <small>선택</small></legend>
+            <div class="region-row">
+              <select id="sido" aria-label="시·도"><option value="">시·도 선택</option></select>
+              <select id="sigungu" aria-label="시·군·구" disabled><option value="">시·군·구</option></select>
+            </div>
+            <input id="locationDetail" aria-label="상세 위치" placeholder="읍·면·동 (선택) 예: 사당동">
+          </fieldset>
+          <label>실종 날짜 <small>선택</small><input id="date" type="date"></label>
+        </div>
+        <button id="search" type="button">유사 후보 살펴보기 <span>→</span></button>
+        <p class="privacy">합성 모드에서는 브라우저 안에서만 동작합니다. Mac 검색 서버 연결 시 사진과 입력값은 검색을 위해 일시 전송되며 서버에 저장하지 않습니다.</p>
+      </div>
+
+      <div class="panel results-panel">
+        <div class="section-title">
+          <span>02</span><div><h2>후보 결과</h2><p id="resultState">검색 전 예시 후보를 표시합니다.</p></div>
+        </div>
+        <div id="results" class="results" aria-live="polite"></div>
+        <div id="pager" class="pager" hidden>
+          <span id="pageInfo"></span>
+          <button id="reroll" type="button" class="reroll">다음 후보 10개 <span>↻</span></button>
+        </div>
+        <aside class="notice"><b>꼭 확인해 주세요</b><p>인공지능 검색 결과는 동일 개체를 확정하지 않습니다. 보호소 공고와 실제 동물을 반드시 직접 확인해야 합니다.</p></aside>
+      </div>
+    </section>
+
+    <section class="proof" aria-label="프로젝트 기준선">
+      <div><strong>14,810</strong><span>검색 기준 사진</span></div>
+      <div><strong>69.75%</strong><span>Recall@1 기준선</span></div>
+      <div><strong>73.53%</strong><span>Recall@5 기준선</span></div>
+      <p>같은 보호 공고의 다른 사진을 찾는 기술 기준선이며 실제 동일 개체 판정 정확도가 아닙니다.</p>
+    </section>
+  </main>
+
+  <footer>PetFinder · SNU Deep Learning Project <span>공개 가능한 합성 정보만 사용</span></footer>
+  <script src="./app.js?v=5"></script>
+</body>
+</html>
